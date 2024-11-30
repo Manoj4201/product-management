@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
-  Container,
   Row,
   Col,
   Button,
@@ -58,7 +57,7 @@ const DraggableProduct = ({
         </td>
 
         <td className="discount-input-wrapper py-0 border-0">
-          {product.id != "001" ? ( // Check if the product is being edited
+          {product.id !== "001" ? ( // Check if the product is being edited
             <div className="d-flex justify-content-end w-100">
               <input className="w-25 discount-inputfeild p-1 border-0 mx-3" />
               <select className="w-50 border-0 p-1 discount-select">
@@ -78,7 +77,7 @@ const DraggableProduct = ({
         </td>
         <div className="justify-content-end w-100 text-end varints-btn bg-transparent">
           <button
-            className={`border-0 bg-transparent text-primary show-variants-btn  ${product.id == "001" ? 'd-none' : ''}`}
+            className={`border-0 bg-transparent text-primary show-variants-btn  ${product.id === "001" ? 'd-none' : ''}`}
             variant="outline-info"
             onClick={() => setShowVariants(!showVariants)}
           >
@@ -206,36 +205,8 @@ function ProductManagementApp() {
       productIndex
     ].variants.filter((_, i) => i !== variantIndex);
     setProducts(newProducts);
-  };
-  // Remove a specific variant
-  const removeVariant = (productIndex, variantIndex) => {
-    setProducts((prev) => {
-      const updated = [...prev];
-      updated[productIndex].variants = updated[productIndex].variants.filter(
-        (_, i) => i !== variantIndex
-      );
-      return updated;
-    });
-  };
-  // Handle product selection in picker
-  const handleProductSelection = (selected) => {
-    setProducts((prev) => {
-      const updated = [...prev];
-      updated.splice(editingIndex, 1, ...selected);
-      return updated;
-    });
-    setShowProductPicker(false);
-  };
-
-  // Modal Handlers
-  // const openProductPicker = (index) => {
-  //   setEditingIndex(index);
-  //   setShowProductPicker(true);
-  // };
-
-  const closeProductPicker = () => {
-    setShowProductPicker(false);
-  };
+  }; 
+   
   // Handle modal open (resetting state)
   const openProductPicker = (index) => {
     setEditingIndex(index);
@@ -244,15 +215,7 @@ function ProductManagementApp() {
     fetchProducts(); // Fetch products
     setShowProductPicker(true);
   };
-
-  // Select products from picker
-  const selectProducts = (selectedProducts) => {
-    const newProducts = [...products];
-    newProducts.splice(editingIndex, 1, ...selectedProducts);
-    setProducts(newProducts);
-    setShowProductPicker(false);
-  };
-
+ 
   // State to manage selected variants
   const [selectedVariants, setSelectedVariants] = useState([]);
 
@@ -275,10 +238,7 @@ function ProductManagementApp() {
   };
 
   // Function to handle variant selection
-  const handleVariantSelect = (isChecked, product, variant) => {
-    const updatedVariants = product.variants.map((v) =>
-      v.id === variant.id ? { ...v, selected: isChecked } : v
-    );
+  const handleVariantSelect = (isChecked, product, variant) => { 
 
     setSelectedVariants((prevSelected) => {
       if (isChecked) {
