@@ -135,7 +135,7 @@ function ProductManagementApp() {
   const [editingIndex, setEditingIndex] = useState(null);
   const [selectedCount, setSelectedCount] = useState(0);
   // Fetch available products
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       const response = await axios.get(API_BASE_URL, {
         params: {
@@ -164,11 +164,11 @@ function ProductManagementApp() {
     } catch (error) {
       console.error("Error fetching products:", error);
     }
-  };
+  }, [searchTerm, page]);
 
   useEffect(() => {
     fetchProducts();
-  }, [searchTerm, page]);
+  }, [fetchProducts]);
 
   // Move product in the list
   const moveProduct = useCallback((fromIndex, toIndex) => {
@@ -292,19 +292,20 @@ function ProductManagementApp() {
   };
 
   // Function to count selected variants
-  const countSelectedVariants = () => {
+  const countSelectedVariants = useCallback(() => {
     return availableProducts.reduce((count, product) => {
       return (
         count + product.variants.filter((variant) => variant.selected).length
       );
     }, 0);
-  };
+  }, [availableProducts]); // Add availableProducts as a dependency
+
   // Example usage of countSelectedVariants
   useEffect(() => {
     const count = countSelectedVariants();
     setSelectedCount(count); // Update the selected count state
     console.log(`Number of selected variants: ${count}`);
-  }, [selectedVariants]);
+  }, [selectedVariants, countSelectedVariants]);
 
   return (
     <>
@@ -378,7 +379,7 @@ function ProductManagementApp() {
                             ); // Update selected variants state
                           }}
                         />
-                        <img src={product.image} className="me-2" style={{maxWidth : "20px"}} />
+                        <img src={product.image} alt={product.title} className="me-2" style={{maxWidth : "20px"}} />
                         <label htmlFor={`product-${product.id}`}>
                           {product.title}
                         </label>
