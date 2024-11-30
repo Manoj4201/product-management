@@ -1,12 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  Row,
-  Col,
-  Button,
-  Modal,
-  Form,
-  Card,
-} from "react-bootstrap";
+import { Row, Col, Button, Modal, Form, Card } from "react-bootstrap";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import axios from "axios";
@@ -25,7 +18,7 @@ const DraggableProduct = ({
   openProductPicker,
   editingIndex,
   removeProducts,
-  lengthofItems
+  lengthofItems,
 }) => {
   const [, ref] = useDrag({
     type: "PRODUCT",
@@ -50,7 +43,9 @@ const DraggableProduct = ({
         className="mb-3 d-table w-80 position-relative"
       >
         <td className="text-nowrap d-flex product-title p-1 justify-content-between">
-          <span className="">{index + 1}. {product.title}</span>
+          <span className="">
+            {index + 1}. {product.title}
+          </span>
           <button className="btn py-0" onClick={() => openProductPicker(index)}>
             <i class="fa-solid fa-pen"></i>
           </button>
@@ -77,20 +72,28 @@ const DraggableProduct = ({
         </td>
         <div className="justify-content-end w-100 text-end varints-btn bg-transparent">
           <button
-            className={`border-0 bg-transparent text-primary show-variants-btn  ${product.id === "001" ? 'd-none' : ''}`}
+            className={`border-0 bg-transparent text-primary show-variants-btn  ${
+              product.id === "001" ? "d-none" : ""
+            }`}
             variant="outline-info"
             onClick={() => setShowVariants(!showVariants)}
           >
-           {showVariants ? (
-              <>Hide Variants<i className="fa-solid fa-angle-up"></i></>
+            {showVariants ? (
+              <>
+                Hide Variants<i className="fa-solid fa-angle-up"></i>
+              </>
             ) : (
-              <>Show Variants<i className="fa-solid fa-angle-down"></i></>
+              <>
+                Show Variants<i className="fa-solid fa-angle-down"></i>
+              </>
             )}
           </button>
         </div>
         <Button
           variant=""
-          className={`me-2 position-absolute cancel-icon bg-transparent ${lengthofItems <= 1 ? 'd-none' : 'd-block'}`}
+          className={`me-2 position-absolute cancel-icon bg-transparent ${
+            lengthofItems <= 1 ? "d-none" : "d-block"
+          }`}
           onClick={() => removeProduct(index)}
         >
           <i class="fa-solid fa-xmark"></i>
@@ -186,7 +189,7 @@ function ProductManagementApp() {
       ...products,
       {
         title: "Select Product",
-        id:"001", 
+        id: "001",
       },
     ]);
   };
@@ -205,8 +208,8 @@ function ProductManagementApp() {
       productIndex
     ].variants.filter((_, i) => i !== variantIndex);
     setProducts(newProducts);
-  }; 
-   
+  };
+
   // Handle modal open (resetting state)
   const openProductPicker = (index) => {
     setEditingIndex(index);
@@ -215,7 +218,7 @@ function ProductManagementApp() {
     fetchProducts(); // Fetch products
     setShowProductPicker(true);
   };
- 
+
   // State to manage selected variants
   const [selectedVariants, setSelectedVariants] = useState([]);
 
@@ -238,8 +241,7 @@ function ProductManagementApp() {
   };
 
   // Function to handle variant selection
-  const handleVariantSelect = (isChecked, product, variant) => { 
-
+  const handleVariantSelect = (isChecked, product, variant) => {
     setSelectedVariants((prevSelected) => {
       if (isChecked) {
         return [...prevSelected, variant];
@@ -309,130 +311,142 @@ function ProductManagementApp() {
 
   return (
     <>
-        {/* <div>Total Products: {products.length}</div>  */}
-    <DndProvider backend={HTML5Backend}>
-      {/* Product List */}
-      {products.map((product, index) => (
-        <DraggableProduct
-          key={index}
-          product={product}
-          index={index}
-          moveProduct={moveProduct}
-          removeProduct={removeProduct}
-          toggleEditProduct={toggleEditProduct}
-          openProductPicker={openProductPicker}
-          editingIndex={editingIndex}
-          removeProducts={removeProducts}
-          lengthofItems={products.length}
-        />
-      ))}
-
-      {/* Add Product Button */}
-     <div className="w-80 d-flex justify-content-end "> <Button className="addproduct-btn px-3" onClick={addEmptyProduct}>Add Product</Button></div>
-
-      {/* Product Picker Modal */}
-      <Modal
-        show={showProductPicker}
-        onHide={() => setShowProductPicker(false)}
-        size="lg"
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>Select Products</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form.Control
-            type="text"
-            placeholder="Search products"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="mb-3"
+      {/* <div>Total Products: {products.length}</div>  */}
+      <DndProvider backend={HTML5Backend}>
+        {/* Product List */}
+        {products.map((product, index) => (
+          <DraggableProduct
+            key={index}
+            product={product}
+            index={index}
+            moveProduct={moveProduct}
+            removeProduct={removeProduct}
+            toggleEditProduct={toggleEditProduct}
+            openProductPicker={openProductPicker}
+            editingIndex={editingIndex}
+            removeProducts={removeProducts}
+            lengthofItems={products.length}
           />
-          {availableProducts.map((product) => {
-            // Check if at least one variant is selected
-            console.log(product);
-            const anyVariantSelected = product.variants.some(
-              (variant) => variant.selected
-            );
-            const allVariantsSelected = product.variants.every(
-              (variant) => variant.selected
-            );
-            return (
-              <Card key={product.id} className="mb-2 border-0">
-                <Card.Body className="py-0">
-                  <Row>
-                    <Col md={8}>
-                      <div className="d-flex align-items-center mb-2">
-                        <input
-                          type="checkbox"
-                          id={`product-${product.id}`} //product-6542539653327
-                          className="me-2"
-                          checked={allVariantsSelected || anyVariantSelected}
-                          onChange={(e) => {
-                            const isChecked = e.target.checked;
-                            handleProductSelect(isChecked, product);
-                            // Update all variants based on the main checkbox
-                            product.variants.forEach((variant) => {
-                              variant.selected = isChecked; // Update each variant's selected state
-                            });
-                            setSelectedVariants(
-                              isChecked ? product.variants : []
-                            ); // Update selected variants state
-                          }}
-                        />
-                        <img src={product.image} alt={product.title} className="me-2" style={{maxWidth : "20px"}} />
-                        <label htmlFor={`product-${product.id}`}>
-                          {product.title}
-                        </label>
-                      </div>
-                      {product.variants.map((variant) => (
-                        <div
-                          key={variant.id}
-                          className="d-flex align-items-center mb-2 justify-content-between ps-3"
-                        >
-                          <div style={{ display: "flex" }}>
-                            <input
-                              type="checkbox"
-                              id={`variant-${variant.id}`}
+        ))}
+
+        {/* Add Product Button */}
+        <div className="w-80 d-flex justify-content-end ">
+          {" "}
+          <Button className="addproduct-btn px-3" onClick={addEmptyProduct}>
+            Add Product
+          </Button>
+        </div>
+
+        {/* Product Picker Modal */}
+        <Modal
+          show={showProductPicker}
+          onHide={() => setShowProductPicker(false)}
+          size="lg"
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>Select Products</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form.Control
+              type="text"
+              placeholder="Search products"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="mb-3"
+            />
+            {availableProducts.map((product) => {
+              // Check if at least one variant is selected
+              console.log(product);
+              const anyVariantSelected = product.variants.some(
+                (variant) => variant.selected
+              );
+              const allVariantsSelected = product.variants.every(
+                (variant) => variant.selected
+              );
+              return (
+                <Card key={product.id} className="mb-2 border-0">
+                  <Card.Body className="py-0">
+                    <Row>
+                      <Col md={8}>
+                        <div className="d-flex align-items-center mb-2">
+                          <input
+                            type="checkbox"
+                            id={`product-${product.id}`} //product-6542539653327
+                            className="me-2"
+                            checked={allVariantsSelected || anyVariantSelected}
+                            onChange={(e) => {
+                              const isChecked = e.target.checked;
+                              handleProductSelect(isChecked, product);
+                              // Update all variants based on the main checkbox
+                              product.variants.forEach((variant) => {
+                                variant.selected = isChecked; // Update each variant's selected state
+                              });
+                              setSelectedVariants(
+                                isChecked ? product.variants : []
+                              ); // Update selected variants state
+                            }}
+                          />
+                          {product.image && (
+                            <img
+                              src={product.image}
+                              alt=""
                               className="me-2"
-                              checked={variant.selected}
-                              onChange={(e) =>
-                                handleVariantSelect(
-                                  e.target.checked,
-                                  product,
-                                  variant
-                                )
-                              }
+                              style={{ maxWidth: "20px" }}
                             />
-                            <div> {variant.title} </div>
-                          </div>
-                          <label htmlFor={`variant-${variant.id}`}>
-                            <div style={{ display: "flex" }}>
-                              <div>{variant.avalible} Avalible</div>
-                              <div className="ps-3">${variant.price}</div>
-                            </div>
+                          )}
+                          <label htmlFor={`product-${product.id}`}>
+                            {product.title}
                           </label>
                         </div>
-                      ))}
-                    </Col>
-                  </Row>
-                </Card.Body>
-              </Card>
-            );
-          })}
-        </Modal.Body>
-        <Modal.Footer className="justify-content-between">
-          <div>{selectedCount} product selected</div>
-          <div>
-            <Button variant="secondary" onClick={handleCancel}>
-              Cancel
-            </Button>
-            <Button variant="success" onClick={handleAdd}>
-              Add
-            </Button>
-          </div>
-        </Modal.Footer>
-      </Modal>
-    </DndProvider>
+                        {product.variants.map((variant) => (
+                          <div
+                            key={variant.id}
+                            className="d-flex align-items-center mb-2 justify-content-between ps-3"
+                          >
+                            <div style={{ display: "flex" }}>
+                              <input
+                                type="checkbox"
+                                id={`variant-${variant.id}`}
+                                className="me-2"
+                                checked={variant.selected}
+                                onChange={(e) =>
+                                  handleVariantSelect(
+                                    e.target.checked,
+                                    product,
+                                    variant
+                                  )
+                                }
+                              />
+                              <div> {variant.title} </div>
+                            </div>
+                            <label htmlFor={`variant-${variant.id}`}>
+                              <div style={{ display: "flex" }}>
+                                <div>{variant.avalible} Avalible</div>
+                                <div className="ps-3">${variant.price}</div>
+                              </div>
+                            </label>
+                          </div>
+                        ))}
+                      </Col>
+                    </Row>
+                  </Card.Body>
+                </Card>
+              );
+            })}
+          </Modal.Body>
+          <Modal.Footer className="justify-content-between">
+            <div>{selectedCount} product selected</div>
+            <div>
+              <Button variant="secondary" onClick={handleCancel}>
+                Cancel
+              </Button>
+              <Button variant="success" onClick={handleAdd}>
+                Add
+              </Button>
+            </div>
+          </Modal.Footer>
+        </Modal>
+      </DndProvider>
     </>
   );
 }
