@@ -34,8 +34,8 @@ const DraggableProduct = ({
       }
     },
   });
-  console.table(product.key);
-  const [showVariants, setShowVariants] = useState(false); // State to manage variant visibility
+
+  const [showVariants, setShowVariants] = useState(false);
   return (
     <>
       <tr
@@ -47,12 +47,12 @@ const DraggableProduct = ({
             {index + 1}. {product.title}
           </span>
           <button className="btn py-0" onClick={() => openProductPicker(index)}>
-            <i class="fa-solid fa-pen"></i>
+            <i className="fa-solid fa-pen"></i>
           </button>
         </td>
 
         <td className="discount-input-wrapper py-0 border-0">
-          {product.id !== "001" ? ( // Check if the product is being edited
+          {product.id !== "001" ? (
             <div className="d-flex justify-content-end w-100">
               <input className="w-30 discount-inputfeild p-1 border-0 me-3" />
               <select className="w-50 border-0 p-1 discount-select">
@@ -96,7 +96,7 @@ const DraggableProduct = ({
           }`}
           onClick={() => removeProduct(index)}
         >
-          <i class="fa-solid fa-xmark"></i>
+          <i className="fa-solid fa-xmark"></i>
         </Button>
       </tr>
       {showVariants &&
@@ -106,7 +106,9 @@ const DraggableProduct = ({
             key={varIndex}
             className="mb-3 d-table w-80 position-relative ms-4"
           >
-            <td className="bg-transparent text-nowrap w-50 variant-title">{variant.title}</td>
+            <td className="bg-transparent text-nowrap w-50 variant-title">
+              {variant.title}
+            </td>
             <td className="bg-transparent w-50 p-0">
               <div className="d-flex justify-content-end w-100">
                 <input className="w-30 discount-inputfeild p-1 border-0 me-2" />
@@ -121,7 +123,7 @@ const DraggableProduct = ({
               className="me-2 position-absolute varinats-cancel-icon bg-transparent"
               onClick={() => removeProducts(index, varIndex)}
             >
-              <i class="fa-solid fa-xmark"></i>
+              <i className="fa-solid fa-xmark"></i>
             </Button>
           </tr>
         ))}
@@ -137,6 +139,15 @@ function ProductManagementApp() {
   const [page, setPage] = useState(1);
   const [editingIndex, setEditingIndex] = useState(null);
   const [selectedCount, setSelectedCount] = useState(0);
+
+  // Add selectedVariants state
+  const [selectedVariants, setSelectedVariants] = useState([]);
+
+  // New state to track previously selected items
+  const [previouslySelectedVariants, setPreviouslySelectedVariants] = useState(
+    []
+  );
+
   // Fetch available products
   const fetchProducts = useCallback(async () => {
     try {
@@ -148,26 +159,37 @@ function ProductManagementApp() {
         },
         headers: { "x-api-key": API_KEY },
       });
-      setAvailableProducts((prevProducts) => [
-        ...prevProducts,
-        ...response.data.map((product) => ({
-          id: product.id,
-          title: product.title,
-          vendor: product.vendor,
-          handle: product.handle,
-          variants: product.variants.map((variant) => ({
+
+      // Modify the fetching to preserve previously selected state
+      const fetchedProducts = response.data.map((product) => ({
+        id: product.id,
+        title: product.title,
+        vendor: product.vendor,
+        handle: product.handle,
+        variants: product.variants.map((variant) => {
+          // Check if this variant was previously selected
+          const wasSelected = previouslySelectedVariants.some(
+            (prevVariant) => prevVariant.id === variant.id
+          );
+
+          return {
             id: variant.id,
             title: variant.title,
             price: variant.price,
-            selected: false, // Initialize selected state
-          })),
-          image: product.image.src, // Use the image URL directly
-        })),
+            selected: wasSelected, // Restore previous selection state
+          };
+        }),
+        image: product.image.src,
+      }));
+
+      setAvailableProducts((prevProducts) => [
+        ...prevProducts,
+        ...fetchedProducts,
       ]);
     } catch (error) {
       console.error("Error fetching products:", error);
     }
-  }, [searchTerm, page]);
+  }, [searchTerm, page, previouslySelectedVariants]);
 
   useEffect(() => {
     fetchProducts();
@@ -194,14 +216,11 @@ function ProductManagementApp() {
     ]);
   };
 
-  // Toggle product editing
-  const toggleEditProduct = (index) => {
-    setEditingIndex(editingIndex === index ? null : index);
-  };
   // Remove a product
   const removeProduct = (index) => {
     setProducts((prev) => prev.filter((_, i) => i !== index));
   };
+
   const removeProducts = (productIndex, variantIndex) => {
     const newProducts = [...products];
     newProducts[productIndex].variants = newProducts[
@@ -210,38 +229,72 @@ function ProductManagementApp() {
     setProducts(newProducts);
   };
 
-  // Handle modal open (resetting state)
+  // Modify openProductPicker to capture previously selected variants
   const openProductPicker = (index) => {
+    // Capture currently selected variants of the product being edited
+    const currentProduct = products[index];
+    const currentlySelectedVariants = currentProduct.variants || [];
+
+    // Store these as previously selected variants
+    setPreviouslySelectedVariants(currentlySelectedVariants);
+
     setEditingIndex(index);
     setAvailableProducts([]); // Reset products
     setPage(1); // Reset page
-    fetchProducts(); // Fetch products
+    fetchProducts(); // Fetch products with previous selection
     setShowProductPicker(true);
   };
 
-  // State to manage selected variants
-  const [selectedVariants, setSelectedVariants] = useState([]);
-
-  // Function to handle selecting/deselecting a product and its variants
+  // Modify handleProductSelect to work with persistent selection
   const handleProductSelect = (isChecked, product) => {
-    const updatedVariants = product.variants.map((variant) => ({
-      ...variant,
-      selected: isChecked,
-    }));
+    const updatedProducts = availableProducts.map((p) => {
+      if (p.id === product.id) {
+        return {
+          ...p,
+          variants: p.variants.map((variant) => ({
+            ...variant,
+            selected: isChecked,
+          })),
+        };
+      }
+      return p;
+    });
 
+    setAvailableProducts(updatedProducts);
+
+    // Update selected variants
     setSelectedVariants((prevSelected) => {
       if (isChecked) {
-        return [...prevSelected, ...updatedVariants];
+        // Add all variants of this product
+        const productsVariants = product.variants;
+        return [...new Set([...prevSelected, ...productsVariants])];
       } else {
+        // Remove all variants of this product
         return prevSelected.filter(
-          (variant) => !updatedVariants.some((v) => v.id === variant.id)
+          (variant) => !product.variants.some((v) => v.id === variant.id)
         );
       }
     });
   };
 
-  // Function to handle variant selection
+  // Modify handleVariantSelect to update both availableProducts and selectedVariants
   const handleVariantSelect = (isChecked, product, variant) => {
+    // Update availableProducts to reflect variant selection
+    const updatedProducts = availableProducts.map((p) => {
+      if (p.id === product.id) {
+        return {
+          ...p,
+          variants: p.variants.map((v) =>
+            v.id === variant.id ? { ...v, selected: isChecked } : v
+          ),
+        };
+      }
+      return p;
+    });
+
+    setAvailableProducts(updatedProducts);
+
+    // Update selectedVariants
     setSelectedVariants((prevSelected) => {
       if (isChecked) {
         return [...prevSelected, variant];
@@ -300,18 +353,17 @@ function ProductManagementApp() {
         count + product.variants.filter((variant) => variant.selected).length
       );
     }, 0);
-  }, [availableProducts]); // Add availableProducts as a dependency
+  }, [availableProducts]);
 
   // Example usage of countSelectedVariants
   useEffect(() => {
     const count = countSelectedVariants();
-    setSelectedCount(count); // Update the selected count state
+    setSelectedCount(count);
     console.log(`Number of selected variants: ${count}`);
   }, [selectedVariants, countSelectedVariants]);
 
   return (
     <>
-      {/* <div>Total Products: {products.length}</div>  */}
       <DndProvider backend={HTML5Backend}>
         {/* Product List */}
         {products.map((product, index) => (
@@ -321,7 +373,6 @@ function ProductManagementApp() {
             index={index}
             moveProduct={moveProduct}
             removeProduct={removeProduct}
-            toggleEditProduct={toggleEditProduct}
             openProductPicker={openProductPicker}
             editingIndex={editingIndex}
             removeProducts={removeProducts}
@@ -331,7 +382,6 @@ function ProductManagementApp() {
 
         {/* Add Product Button */}
         <div className="w-80 d-flex justify-content-end ">
-          {" "}
           <Button className="addproduct-btn px-3" onClick={addEmptyProduct}>
             Add Product
           </Button>
@@ -341,7 +391,6 @@ function ProductManagementApp() {
         <Modal
           show={showProductPicker}
           onHide={() => setShowProductPicker(false)}
-          // size="lg"
         >
           <Modal.Header closeButton>
             <Modal.Title>Select Products</Modal.Title>
@@ -355,77 +404,75 @@ function ProductManagementApp() {
               className="mb-3"
             />
             {availableProducts.map((product) => {
-              // Check if at least one variant is selected
-              console.log(product);
               const anyVariantSelected = product.variants.some(
                 (variant) => variant.selected
               );
               const allVariantsSelected = product.variants.every(
                 (variant) => variant.selected
               );
+
               return (
                 <Card key={product.id} className="mb-2 border-0">
                   <Card.Body className="py-0">
                     <Row>
-                        <div className="d-flex align-items-center mb-2">
-                          <input
-                            type="checkbox"
-                            id={`product-${product.id}`} //product-6542539653327
+                      <div className="d-flex align-items-center mb-2">
+                        <input
+                          type="checkbox"
+                          id={`product-${product.id}`}
+                          className="me-2"
+                          checked={allVariantsSelected || anyVariantSelected}
+                          onChange={(e) => {
+                            const isChecked = e.target.checked;
+                            handleProductSelect(isChecked, product);
+                            product.variants.forEach((variant) => {
+                              variant.selected = isChecked;
+                            });
+                            setSelectedVariants(
+                              isChecked ? product.variants : []
+                            );
+                          }}
+                        />
+                        {product.image && (
+                          <img
+                            src={product.image}
+                            alt=""
                             className="me-2"
-                            checked={allVariantsSelected || anyVariantSelected}
-                            onChange={(e) => {
-                              const isChecked = e.target.checked;
-                              handleProductSelect(isChecked, product);
-                              // Update all variants based on the main checkbox
-                              product.variants.forEach((variant) => {
-                                variant.selected = isChecked; // Update each variant's selected state
-                              });
-                              setSelectedVariants(
-                                isChecked ? product.variants : []
-                              ); // Update selected variants state
-                            }}
+                            style={{ maxWidth: "20px" }}
                           />
-                          {product.image && (
-                            <img
-                              src={product.image}
-                              alt=""
+                        )}
+                        <label htmlFor={`product-${product.id}`}>
+                          {product.title}
+                        </label>
+                      </div>
+                      {product.variants.map((variant) => (
+                        <div
+                          key={variant.id}
+                          className="d-flex align-items-center mb-2 justify-content-between ps-3"
+                        >
+                          <div style={{ display: "flex" }}>
+                            <input
+                              type="checkbox"
+                              id={`variant-${variant.id}`}
                               className="me-2"
-                              style={{ maxWidth: "20px" }}
+                              checked={variant.selected}
+                              onChange={(e) =>
+                                handleVariantSelect(
+                                  e.target.checked,
+                                  product,
+                                  variant
+                                )
+                              }
                             />
-                          )}
-                          <label htmlFor={`product-${product.id}`}>
-                            {product.title}
+                            <div> {variant.title} </div>
+                          </div>
+                          <label htmlFor={`variant-${variant.id}`}>
+                            <div className="d-flex">
+                              {/* <div>{variant.avalible} Avalible</div> */}
+                              <div className="ps-3">${variant.price}</div>
+                            </div>
                           </label>
                         </div>
-                        {product.variants.map((variant) => (
-                          <div
-                            key={variant.id}
-                            className="d-flex align-items-center mb-2 justify-content-between ps-3"
-                          >
-                            <div style={{ display: "flex" }}>
-                              <input
-                                type="checkbox"
-                                id={`variant-${variant.id}`}
-                                className="me-2"
-                                checked={variant.selected}
-                                onChange={(e) =>
-                                  handleVariantSelect(
-                                    e.target.checked,
-                                    product,
-                                    variant
-                                  )
-                                }
-                              />
-                              <div> {variant.title} </div>
-                            </div>
-                            <label htmlFor={`variant-${variant.id}`}>
-                              <div className="d-flex">
-                                {/* <div>{variant.avalible} Avalible</div> */}
-                                <div className="ps-3">${variant.price}</div>
-                              </div>
-                            </label>
-                          </div>
-                        ))}
+                      ))}
                     </Row>
                   </Card.Body>
                 </Card>
