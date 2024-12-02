@@ -182,12 +182,11 @@ function ProductManagementApp() {
       );
       setFilteredProducts(filtered);
     },
-    [searchTerm] // Include searchTerm as a dependency
+    [searchTerm]
   );
 
   // Fetch available products
   const fetchProducts = useCallback(async () => {
-    if (loading) return;
     try {
       setLoading(true);
       const response = await axios.get(API_CONFIG.BASE_URL, {
@@ -231,7 +230,12 @@ function ProductManagementApp() {
       console.error("Error fetching products:", error);
       setLoading(false);
     }
-  }, [searchTerm, page, previouslySelectedVariants, updateFilteredProducts,loading]);
+  }, [
+    searchTerm,
+    page,
+    previouslySelectedVariants,
+    updateFilteredProducts,
+  ]);
 
   // Lifecycle and data fetching management
   useEffect(() => {
@@ -246,7 +250,7 @@ function ProductManagementApp() {
     updateFilteredProducts(availableProducts);
   }, [searchTerm, availableProducts, updateFilteredProducts]);
 
-  // Handle scroll pagination
+   // Handle scroll pagination
   const handleScroll = useCallback(() => {
     const modalBody = modalBodyRef.current;
     if (!modalBody) return;
@@ -260,7 +264,6 @@ function ProductManagementApp() {
       setPage((prevPage) => prevPage + 1);
     }
   }, [hasMore, loading]);
-
   // Lifecycle and data fetching management
   useEffect(() => {
     isMountedRef.current = true;
@@ -500,7 +503,7 @@ function ProductManagementApp() {
               onChange={(e) => handleSearch(e.target.value)}
               className="mb-3"
             />
-            {availableProducts.map((product) => {
+            {filteredProducts.map((product) => {
               const anyVariantSelected = product.variants.some(
                 (variant) => variant.selected
               );
