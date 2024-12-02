@@ -42,6 +42,7 @@ body {
 .w-30 {
   width: 30%;
 }
+
 .varints-btn {
   display: table-caption;
 }
@@ -51,10 +52,12 @@ body {
   box-shadow: 2px 2px #0000001A !important;
   border-radius: 5px;
 }
-.discount-select{
+
+.discount-select {
   border-radius: 5px;
 }
-.variant-title{
+
+.variant-title {
   font-size: 16px;
   font-weight: 500;
   line-height: 1;
@@ -103,4 +106,17 @@ body {
 .discount-inputfeild,
 .product-title {
   box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 27px, rgba(0, 0, 0, 0.22) 0px 0px 30px !important;
+}
+
+@media screen and (max-width: 600px) {
+  table {
+    margin: 0 !important;
+  }
+  .product-title{
+    width: 188px !important;
+  }
+  .addiscount-btn{
+    font-size: 14px;
+    white-space: nowrap;
+  }
 }
