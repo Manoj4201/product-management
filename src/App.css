@@ -1,9 +1,11 @@
-.primaryfont-color{
+.primaryfont-color {
   color: #008060 !important;
 }
-body{
+
+body {
   background-color: #F6F6F8;
 }
+
 .App {
 
   max-width: 600px;
@@ -19,7 +21,10 @@ body{
 .product-title {
   font-size: 16px;
   font-weight: 500;
+  border-radius: 5px;
+  width: 250px !important;
 }
+
 
 
 .cancel-icon {
@@ -34,6 +39,9 @@ body{
   width: 80%;
 }
 
+.w-30 {
+  width: 30%;
+}
 .varints-btn {
   display: table-caption;
 }
@@ -43,18 +51,18 @@ body{
   box-shadow: 2px 2px #0000001A !important;
   border-radius: 5px;
 }
-
-.discount-select {
-  box-shadow: 2px 2px #0000001A !important;
+.discount-select{
+  border-radius: 5px;
 }
+.variant-title{
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1;
+}
+
 
 .discount-input-wrapper {
   background-color: transparent !important;
-}
-
-.product-title {
-  box-shadow: 2px 2px #0000001A !important;
-  border-radius: 5px;
 }
 
 .varinats-cancel-icon {
@@ -65,24 +73,34 @@ body{
   top: 46%;
 }
 
-.addproduct-btn{
+.addproduct-btn {
   border: 2px solid #008060 !important;
-  color:  #008060 !important;
-}
-.addproduct-btn:hover{ 
-  color:  #008060 !important;
-  background-color: #fff !important;
-}
-.addiscount-btn{
-  border: 2px solid #008060 !important;
-  color:  #008060 !important;
+  color: #008060 !important;
 }
 
-.addiscount-btn:hover{
-  color:  #008060 !important;
+.addproduct-btn:hover {
+  color: #008060 !important;
   background-color: #fff !important;
-  
 }
-.show-variants-btn{
+
+.addiscount-btn {
+  border: 2px solid #008060 !important;
+  color: #008060 !important;
+}
+
+.addiscount-btn:hover {
+  color: #008060 !important;
+  background-color: #fff !important;
+
+}
+
+.show-variants-btn {
   text-decoration: underline;
+}
+
+.variant-title,
+.discount-select,
+.discount-inputfeild,
+.product-title {
+  box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 27px, rgba(0, 0, 0, 0.22) 0px 0px 30px !important;
 }

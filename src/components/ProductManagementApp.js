@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Row, Col, Button, Modal, Form, Card } from "react-bootstrap";
+import { Row, Button, Modal, Form, Card } from "react-bootstrap";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import axios from "axios";
@@ -40,7 +40,7 @@ const DraggableProduct = ({
     <>
       <tr
         ref={(node) => ref(drop(node))}
-        className="mb-3 d-table w-80 position-relative"
+        className="mb-2 d-table w-80 position-relative"
       >
         <td className="text-nowrap d-flex product-title p-1 justify-content-between">
           <span className="">
@@ -54,7 +54,7 @@ const DraggableProduct = ({
         <td className="discount-input-wrapper py-0 border-0">
           {product.id !== "001" ? ( // Check if the product is being edited
             <div className="d-flex justify-content-end w-100">
-              <input className="w-25 discount-inputfeild p-1 border-0 mx-3" />
+              <input className="w-30 discount-inputfeild p-1 border-0 me-3" />
               <select className="w-50 border-0 p-1 discount-select">
                 <option>%off</option>
                 <option>flat</option>
@@ -106,10 +106,10 @@ const DraggableProduct = ({
             key={varIndex}
             className="mb-3 d-table w-80 position-relative ms-4"
           >
-            <td className="bg-transparent text-nowrap w-50">{variant.title}</td>
-            <td className="bg-transparent w-50">
+            <td className="bg-transparent text-nowrap w-50 variant-title">{variant.title}</td>
+            <td className="bg-transparent w-50 p-0">
               <div className="d-flex justify-content-end w-100">
-                <input className="w-25 discount-inputfeild p-1 border-0 mx-3" />
+                <input className="w-30 discount-inputfeild p-1 border-0 me-2" />
                 <select className="w-50 border-0 p-1 discount-select">
                   <option>%off</option>
                   <option>flat</option>
@@ -341,7 +341,7 @@ function ProductManagementApp() {
         <Modal
           show={showProductPicker}
           onHide={() => setShowProductPicker(false)}
-          size="lg"
+          // size="lg"
         >
           <Modal.Header closeButton>
             <Modal.Title>Select Products</Modal.Title>
@@ -367,7 +367,6 @@ function ProductManagementApp() {
                 <Card key={product.id} className="mb-2 border-0">
                   <Card.Body className="py-0">
                     <Row>
-                      <Col md={8}>
                         <div className="d-flex align-items-center mb-2">
                           <input
                             type="checkbox"
@@ -420,14 +419,13 @@ function ProductManagementApp() {
                               <div> {variant.title} </div>
                             </div>
                             <label htmlFor={`variant-${variant.id}`}>
-                              <div style={{ display: "flex" }}>
-                                <div>{variant.avalible} Avalible</div>
+                              <div className="d-flex">
+                                {/* <div>{variant.avalible} Avalible</div> */}
                                 <div className="ps-3">${variant.price}</div>
                               </div>
                             </label>
                           </div>
                         ))}
-                      </Col>
                     </Row>
                   </Card.Body>
                 </Card>
@@ -436,11 +434,11 @@ function ProductManagementApp() {
           </Modal.Body>
           <Modal.Footer className="justify-content-between">
             <div>{selectedCount} product selected</div>
-            <div>
+            <div className="d-flex ">
               <Button variant="secondary" onClick={handleCancel}>
                 Cancel
               </Button>
-              <Button variant="success" onClick={handleAdd}>
+              <Button variant="success" className="ms-2" onClick={handleAdd}>
                 Add
               </Button>
             </div>
