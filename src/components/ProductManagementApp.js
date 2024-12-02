@@ -231,7 +231,7 @@ function ProductManagementApp() {
       console.error("Error fetching products:", error);
       setLoading(false);
     }
-  }, [searchTerm, page, previouslySelectedVariants, updateFilteredProducts]);
+  }, [searchTerm, page, previouslySelectedVariants, updateFilteredProducts,loading]);
 
   // Lifecycle and data fetching management
   useEffect(() => {
@@ -260,7 +260,7 @@ function ProductManagementApp() {
       setPage((prevPage) => prevPage + 1);
     }
   }, [hasMore, loading]);
-  
+
   // Lifecycle and data fetching management
   useEffect(() => {
     isMountedRef.current = true;
