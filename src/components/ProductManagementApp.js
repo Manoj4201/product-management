@@ -174,9 +174,22 @@ function ProductManagementApp() {
   const isMountedRef = useRef(false);
   const modalBodyRef = useRef(null);
 
+  // Function to update filtered products based on search term
+  const updateFilteredProducts = useCallback(
+    (products) => {
+      const filtered = products.filter((product) =>
+        product.title.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredProducts(filtered);
+    },
+    [searchTerm] // Include searchTerm as a dependency
+  );
+
   // Fetch available products
   const fetchProducts = useCallback(async () => {
+    if (loading) return;
     try {
+      setLoading(true);
       const response = await axios.get(API_CONFIG.BASE_URL, {
         params: {
           search: searchTerm,
@@ -218,7 +231,7 @@ function ProductManagementApp() {
       console.error("Error fetching products:", error);
       setLoading(false);
     }
-  }, [searchTerm, page, previouslySelectedVariants]);
+  }, [searchTerm, page, previouslySelectedVariants, updateFilteredProducts]);
 
   // Lifecycle and data fetching management
   useEffect(() => {
@@ -228,10 +241,11 @@ function ProductManagementApp() {
     };
   }, []);
 
+  // Update filtered products when search term changes
   useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
-  
+    updateFilteredProducts(availableProducts);
+  }, [searchTerm, availableProducts, updateFilteredProducts]);
+
   // Handle scroll pagination
   const handleScroll = useCallback(() => {
     const modalBody = modalBodyRef.current;
@@ -246,22 +260,14 @@ function ProductManagementApp() {
       setPage((prevPage) => prevPage + 1);
     }
   }, [hasMore, loading]);
-
-  // Function to update filtered products based on search term
-  const updateFilteredProducts = useCallback(
-    (products) => {
-      const filtered = products.filter((product) =>
-        product.title.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredProducts(filtered);
-    },
-    [searchTerm]
-  );
-
-  // Update filtered products when search term changes
+  
+  // Lifecycle and data fetching management
   useEffect(() => {
-    updateFilteredProducts(availableProducts);
-  }, [searchTerm, availableProducts, updateFilteredProducts]);
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     fetchProducts();
