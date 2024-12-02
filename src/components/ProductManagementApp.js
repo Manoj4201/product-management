@@ -1,15 +1,28 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Row, Button, Modal, Form, Card } from "react-bootstrap";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-// API Configuration
-const API_BASE_URL = "https://stageapi.monkcommerce.app/task/products/search?";
-const API_KEY = "72njgfa948d9aS7gs5"; // Replace with actual API key
+// Configuration Constants
+const API_CONFIG = {
+  BASE_URL: "https://stageapi.monkcommerce.app/task/products/search?",
+  KEY: "72njgfa948d9aS7gs5", // Note: Replace with actual API key
+  PAGINATION_LIMIT: 10,
+};
 
-// Draggable Product Component
+/**
+ * DraggableProduct Component
+ * Renders an individual product row with drag-and-drop functionality
+ *
+ * @param {Object} props - Component props
+ * @param {Object} props.product - Product details
+ * @param {number} props.index - Product index in the list
+ * @param {Function} props.moveProduct - Function to reorder products
+ * @param {Function} props.removeProduct - Function to remove a product
+ */
+
 const DraggableProduct = ({
   product,
   index,
@@ -20,11 +33,7 @@ const DraggableProduct = ({
   removeProducts,
   lengthofItems,
 }) => {
-  const [, ref] = useDrag({
-    type: "PRODUCT",
-    item: { index },
-  });
-
+  const [, ref] = useDrag({ type: "PRODUCT", item: { index } });
   const [, drop] = useDrop({
     accept: "PRODUCT",
     hover: (draggedItem) => {
@@ -35,13 +44,17 @@ const DraggableProduct = ({
     },
   });
 
+  // State to toggle variant visibility
   const [showVariants, setShowVariants] = useState(false);
+
   return (
     <>
+      {/* Main Product Row */}
       <tr
         ref={(node) => ref(drop(node))}
         className="mb-2 d-table w-80 position-relative"
       >
+        {/* Product Title and Edit Button */}
         <td className="text-nowrap d-flex product-title p-1 justify-content-between">
           <span className="">
             {index + 1}. {product.title}
@@ -50,7 +63,7 @@ const DraggableProduct = ({
             <i className="fa-solid fa-pen"></i>
           </button>
         </td>
-
+        {/* Discount Input Section */}
         <td className="discount-input-wrapper py-0 border-0">
           {product.id !== "001" ? (
             <div className="d-flex justify-content-end w-100">
@@ -70,6 +83,8 @@ const DraggableProduct = ({
             </Button>
           )}
         </td>
+
+        {/* Variants Toggle Button */}
         <div className="justify-content-end w-100 text-end varints-btn bg-transparent">
           <button
             className={`border-0 bg-transparent text-primary show-variants-btn  ${
@@ -89,6 +104,8 @@ const DraggableProduct = ({
             )}
           </button>
         </div>
+
+        {/* Remove Product Button (Hidden if only one product) */}
         <Button
           variant=""
           className={`me-2 position-absolute cancel-icon bg-transparent ${
@@ -99,6 +116,7 @@ const DraggableProduct = ({
           <i className="fa-solid fa-xmark"></i>
         </Button>
       </tr>
+      {/* Variants Rows */}
       {showVariants &&
         product.variants.map((variant, varIndex) => (
           <tr
@@ -131,7 +149,12 @@ const DraggableProduct = ({
   );
 };
 
+/**
+ * ProductManagementApp Component
+ * Main component for managing product selection, reordering, and discounts
+ */
 function ProductManagementApp() {
+  // State Management
   const [products, setProducts] = useState([]);
   const [showProductPicker, setShowProductPicker] = useState(false);
   const [availableProducts, setAvailableProducts] = useState([]);
@@ -139,61 +162,122 @@ function ProductManagementApp() {
   const [page, setPage] = useState(1);
   const [editingIndex, setEditingIndex] = useState(null);
   const [selectedCount, setSelectedCount] = useState(0);
-
-  // Add selectedVariants state
   const [selectedVariants, setSelectedVariants] = useState([]);
-
-  // New state to track previously selected items
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [previouslySelectedVariants, setPreviouslySelectedVariants] = useState(
     []
   );
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
+
+  // Refs for component lifecycle and scroll management
+  const isMountedRef = useRef(false);
+  const modalBodyRef = useRef(null);
 
   // Fetch available products
   const fetchProducts = useCallback(async () => {
     try {
-      const response = await axios.get(API_BASE_URL, {
+      const response = await axios.get(API_CONFIG.BASE_URL, {
         params: {
           search: searchTerm,
           page: page,
-          limit: 10,
+          limit: API_CONFIG.PAGINATION_LIMIT,
         },
-        headers: { "x-api-key": API_KEY },
+        headers: { "x-api-key": API_CONFIG.KEY },
       });
 
-      // Modify the fetching to preserve previously selected state
+      // Only update if component is still mounted
+      if (!isMountedRef.current) return;
+
+      // Process fetched products with variant selection tracking
       const fetchedProducts = response.data.map((product) => ({
         id: product.id,
         title: product.title,
         vendor: product.vendor,
         handle: product.handle,
-        variants: product.variants.map((variant) => {
-          // Check if this variant was previously selected
-          const wasSelected = previouslySelectedVariants.some(
+        variants: product.variants.map((variant) => ({
+          id: variant.id,
+          title: variant.title,
+          price: variant.price,
+          selected: previouslySelectedVariants.some(
             (prevVariant) => prevVariant.id === variant.id
-          );
-
-          return {
-            id: variant.id,
-            title: variant.title,
-            price: variant.price,
-            selected: wasSelected, // Restore previous selection state
-          };
-        }),
+          ),
+        })),
         image: product.image.src,
       }));
 
+      // Update product availability and pagination
+      setHasMore(fetchedProducts.length > 0);
       setAvailableProducts((prevProducts) => [
         ...prevProducts,
         ...fetchedProducts,
       ]);
+      updateFilteredProducts(fetchedProducts);
+      setLoading(false);
     } catch (error) {
       console.error("Error fetching products:", error);
+      setLoading(false);
     }
   }, [searchTerm, page, previouslySelectedVariants]);
+
+  // Lifecycle and data fetching management
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
+  
+  // Handle scroll pagination
+  const handleScroll = useCallback(() => {
+    const modalBody = modalBodyRef.current;
+    if (!modalBody) return;
+
+    // Check if scrolled to bottom
+    const isAtBottom =
+      modalBody.scrollHeight - modalBody.scrollTop <=
+      modalBody.clientHeight + 20;
+
+    if (isAtBottom && hasMore && !loading) {
+      setPage((prevPage) => prevPage + 1);
+    }
+  }, [hasMore, loading]);
+
+  // Function to update filtered products based on search term
+  const updateFilteredProducts = useCallback(
+    (products) => {
+      const filtered = products.filter((product) =>
+        product.title.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredProducts(filtered);
+    },
+    [searchTerm]
+  );
+
+  // Update filtered products when search term changes
+  useEffect(() => {
+    updateFilteredProducts(availableProducts);
+  }, [searchTerm, availableProducts, updateFilteredProducts]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  // Debounce search to reduce unnecessary API calls
+  const handleSearch = useCallback(
+    (term) => {
+      setSearchTerm(term);
+      setPage(1); // Reset page when searching
+      setAvailableProducts([]); // Clear previous products
+      setHasMore(true); // Reset has more flag
+      fetchProducts(); // Fetch new products based on search term
+    },
+    [fetchProducts]
+  );
 
   // Move product in the list
   const moveProduct = useCallback((fromIndex, toIndex) => {
@@ -231,7 +315,6 @@ function ProductManagementApp() {
 
   // Modify openProductPicker to capture previously selected variants
   const openProductPicker = (index) => {
-    // Capture currently selected variants of the product being edited
     const currentProduct = products[index];
     const currentlySelectedVariants = currentProduct.variants || [];
 
@@ -241,6 +324,7 @@ function ProductManagementApp() {
     setEditingIndex(index);
     setAvailableProducts([]); // Reset products
     setPage(1); // Reset page
+    setHasMore(true); // Reset has more flag
     fetchProducts(); // Fetch products with previous selection
     setShowProductPicker(true);
   };
@@ -395,12 +479,19 @@ function ProductManagementApp() {
           <Modal.Header closeButton>
             <Modal.Title>Select Products</Modal.Title>
           </Modal.Header>
-          <Modal.Body>
+          <Modal.Body
+            ref={modalBodyRef}
+            onScroll={handleScroll}
+            style={{
+              maxHeight: "500px",
+              overflowY: "auto",
+            }}
+          >
             <Form.Control
               type="text"
               placeholder="Search products"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => handleSearch(e.target.value)}
               className="mb-3"
             />
             {availableProducts.map((product) => {
@@ -478,6 +569,19 @@ function ProductManagementApp() {
                 </Card>
               );
             })}
+            {/* Loading indicator */}
+            {loading && (
+              <div className="text-center my-3">
+                <span>Loading more products...</span>
+              </div>
+            )}
+
+            {/* End of results indicator */}
+            {!hasMore && availableProducts.length > 0 && (
+              <div className="text-center my-3">
+                <span>No more products to load</span>
+              </div>
+            )}
           </Modal.Body>
           <Modal.Footer className="justify-content-between">
             <div>{selectedCount} product selected</div>
