@@ -3,13 +3,15 @@
 }
 
 body {
-  background-color: #F6F6F8;
+  background-color: #F6F6F8 !important;
 }
 
 .App {
 
   max-width: 600px;
   margin: auto;
+  min-height: 100vh;
+  /* background-color: #F6F6F8; */
 }
 
 .product-title-wrapper {
@@ -22,7 +24,7 @@ body {
   font-size: 16px;
   font-weight: 500;
   border-radius: 5px;
-  width: 250px !important;
+  background-color: #fff;
 }
 
 
@@ -30,8 +32,8 @@ body {
 .cancel-icon {
   color: rgba(0, 0, 0, 0.4);
   z-index: 1;
-  right: -15%;
-  top: 19%;
+  right: -11%;
+  top: 24%;
   transform: translate(-50%, -50%);
 }
 
@@ -88,7 +90,8 @@ body {
 
 .addiscount-btn {
   border: 2px solid #008060 !important;
-  color: #008060 !important;
+  background-color: #008060 !important;
+  color: #fff !important;
 }
 
 .addiscount-btn:hover {
@@ -101,22 +104,39 @@ body {
   text-decoration: underline;
 }
 
-.variant-title,
 .discount-select,
 .discount-inputfeild,
 .product-title {
-  box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 27px, rgba(0, 0, 0, 0.22) 0px 0px 30px !important;
+  box-shadow: 0px 2px 4px 0px #0000001A !important;
+  border: 1px solid #00000012;
+}
+
+table {
+  border-spacing: 30px;
 }
 
 @media screen and (max-width: 600px) {
   table {
     margin: 0 !important;
   }
-  .product-title{
+
+  .product-title {
     width: 188px !important;
   }
-  .addiscount-btn{
+
+  .addiscount-btn {
     font-size: 14px;
     white-space: nowrap;
   }
+}
+
+.product-text {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 14px;
+  text-align: left;
+
+  color: #00000080;
+
+
 }
