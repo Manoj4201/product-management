@@ -490,7 +490,7 @@ function ProductManagementApp() {
     }
   };
   // throttle the handleSeacrch function 
-  const throttleHandleSearch = useCallback(throttle(handleSearch, 300), [handleSearch]);
+  const throttleHandleSearch = useCallback((term) => throttle(handleSearch(term), 2000), [handleSearch]);
   return (
     <DndProvider backend={HTML5Backend}>
       {/* Product List */}
